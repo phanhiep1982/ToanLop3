@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 # --- CẤU HÌNH HỆ THỐNG ---
 pygame.init()
@@ -11,6 +12,24 @@ pygame.display.set_caption("Vở Toán Thông Minh - Bé Vân Lớp 3")
 WHITE, BLACK, BLUE_GRID = (255, 255, 255), (0, 0, 0), (210, 235, 255)
 RED_MARGIN, SUCCESS_GREEN = (255, 200, 200), (34, 139, 34)
 HIGHLIGHT_BLUE = (0, 102, 204)
+
+# File lưu kỷ lục
+DATA_FILE = "ky_luc.txt"
+
+def load_completed_count():
+    """Hàm đọc số bài đã làm từ file txt"""
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            try:
+                return int(f.read().strip())
+            except:
+                return 0
+    return 0
+
+def save_completed_count(count):
+    """Hàm ghi số bài đã làm vào file txt"""
+    with open(DATA_FILE, "w") as f:
+        f.write(str(count))
 
 def get_font(size):
     for f in ["Tahoma", "Segoe UI", "Arial"]:
@@ -71,20 +90,23 @@ def generate_question():
 
 def main():
     label, boxes = generate_question()
-    completed_count = 0  # BỘ ĐẾM SỐ BÀI ĐÃ XONG
+    # 1. Đọc số bài cũ từ file khi bắt đầu
+    completed_count = load_completed_count() 
+    
     running = True
     show_success = False
     timer = 0
 
     while running:
         screen.fill(WHITE)
+        # Vẽ giấy ô ly
         for i in range(0, WIDTH, 40):
             pygame.draw.line(screen, BLUE_GRID, (i, 0), (i, HEIGHT))
             pygame.draw.line(screen, BLUE_GRID, (0, i), (WIDTH, i))
         pygame.draw.line(screen, RED_MARGIN, (100, 0), (100, HEIGHT), 3)
 
-        # Hiển thị bộ đếm ở góc trên bên phải
-        count_txt = FONT_SMALL.render(f"Số bài Vân đã làm: {completed_count}", True, (200, 0, 0))
+        # Hiển thị bộ đếm (Bảng vàng)
+        count_txt = FONT_SMALL.render(f"Bảng vàng của Vân: {completed_count} bài", True, (200, 0, 0))
         screen.blit(count_txt, (450, 20))
 
         parts = label.split()
@@ -102,7 +124,9 @@ def main():
         if all(b.is_correct for b in boxes):
             screen.blit(FONT_MED.render("GIỎI QUÁ!", True, SUCCESS_GREEN), (300, 450))
             if not show_success:
-                completed_count += 1 # Tăng bộ đếm khi làm đúng
+                completed_count += 1
+                # 2. Lưu ngay vào file khi bé làm xong 1 bài
+                save_completed_count(completed_count) 
                 show_success = True
                 timer = pygame.time.get_ticks()
             
